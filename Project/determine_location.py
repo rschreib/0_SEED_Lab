@@ -12,17 +12,19 @@ class Point:
     def __repr__(self):
         return "(x,y) = (%.2f,%.2f)cm   \t(%.2f,%.2f)ft" % (self.x,self.y,cm_to_feet(self.x),cm_to_feet(self.y))
 class Beacon:
-    def __init__(self,x, y, radius):
+    car = Point(0,0)
+    def __init__(self,x, y, radius = 0):
         self.x = x                      # Location of Beacon on Grid
         self.y = y                      # Location of Beacon on Grid
-        self.radius = radius            # distance from car
+        self.radius = magnitude(self.car.x - x, self.car.y - y)     # distance from car
+        self.angle = math.degrees(math.atan2(self.car.x - x, self.car.y - y))
     def __repr__(self):
-        return "(x,y) = (%.2f,%.2f)cm   \t(%.2f,%.2f)ft" % (self.x,self.y,cm_to_feet(self.x),cm_to_feet(self.y))
+        return "(x,y) = (%.1f,%.1f)cm   \t(%.1f,%.1f)ft\t%.1f ft\t%.1f deg\n" % (self.x,self.y,cm_to_feet(self.x),cm_to_feet(self.y),cm_to_feet(self.radius),self.angle)
 def get_angle_and_distance(p, offset_angle):
     angle = math.degrees(math.atan(p.y / p.x)) - 90 + offset_angle
-    if angle < -90:
+    if angle < -90: ##########################################################################################################################  Issues
         angle += 180
-    elif angle > 90:
+    elif angle > 90: #########################################################################################################################  Issues
         angle -= 180
     magnitude = math.sqrt(p.x**2 + p.y**2)
     return angle, magnitude
@@ -81,7 +83,7 @@ def Get_Angle_Distance_For_Arduino(b1_x,b1_y,b1_distanceFromCar,b1_angleFromCar,
     car_travel_angle, car_travel_distance = get_angle_and_distance(car_travel, angle_offset)#- imageAngle))
 
     if (destination.y > car_Location.y) and (destination.x > car_Location.x):
-        car_travel_angle = car_travel_angle + 180
+        car_travel_angle = car_travel_angle - 180
 
     print("Beacon 1:\t{}".format(beacon1))
     print("Beacon 2:\t{}".format(beacon2))
@@ -94,4 +96,31 @@ def Get_Angle_Distance_For_Arduino(b1_x,b1_y,b1_distanceFromCar,b1_angleFromCar,
 
     return car_travel_angle, car_travel_distance
 
+Xarray = [4,2,6,2,6,2,5,7,9,9,9,7,4,1,0,0,0]
+Yarray = [5,2,2,8,8,0,0,0,2,5,8,11,11,11,8,5,2]
+MagArray = [3.61,3.61,3.61,3.61,5.39,5.10,5.83,5.83,5.00,5.83,6.71,6.00,6.71,5.00,4.00,5.00]
+AngleArray = [33.7,-33.7,146.3,-146.3,21.8,-11.3,-31.0,-59.0,-90.0,-121.0,-153.4,180.0,153.4,126.9,90.0,53.1]
+BeaconArray = []
 
+# hypotenuse1 = hyps[0]        # Given from piCamera in cm
+# angle1 = angles[0]           # Given from piCamera in degrees
+# hypotenuse1 = 4
+# angle1 = 45.0
+
+Beacon.car = Point(feet_to_cm(Xarray[0]),feet_to_cm(Yarray[0])) # Car Location
+for i in range(len(Xarray)):
+    x = Xarray[i]
+    y = Yarray[i]
+    BeaconArray.append(Beacon(feet_to_cm(x),feet_to_cm(y)))
+
+print(BeaconArray)
+# Beacon 2 information
+# x2 = feet_to_cm(2.0)        # Given from Beacon in feet
+# y2 = feet_to_cm(0.0)        # Given from Beacon in feet
+# hypotenuse2 = hyps[1]       # Given from piCamera in cm
+# hypotenuse2 = 3
+
+# Target Destination (use computer monitor coordinate graph system)
+# xT = feet_to_cm(2.0)
+# yT = feet_to_cm(4.0)
+# angleForArduino, magnitudeForArduino = Get_Angle_Distance_For_Arduino(x1,y1,hypotenuse1,angle1,x2,y2,hypotenuse2,xT,yT)
