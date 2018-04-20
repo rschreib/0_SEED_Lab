@@ -1,9 +1,12 @@
 import math # Example: math.degrees(math.atan(math.sqrt(3)/1))
 from pprint import pprint
-# import sys
-# color = sys.stdout.shell
-# try: color = sys.stdout.shell
-# except AttributeError: raise RuntimeError("Use IDLE")
+import sys
+
+usingTerminal = False
+try:
+    color = sys.stdout.shell
+except:
+    usingTerminal = True
 
 # Functions
 def magnitude(x, y):
@@ -19,6 +22,7 @@ class Point:
     def __repr__(self):
         return("(%.2f,%.2f) ft" % (self.x,self.y))
 class Beacon:
+    global usingTerminal
     car = Point(0,0)
     def __init__(self, color, name, x, y, radius = 0, angle = 0):
         self.x = x                      # Location of Beacon on Grid
@@ -36,11 +40,15 @@ class Beacon:
         self.highlight = False
     def __repr__(self):
         if self.name == 'Car':
-            # return ("\033[1;35;40m%s\t%s\t(%.1f,%.1f) ft\t%.1f ft\t%.1f deg\033[0m\t\t<-CAR-" % (self.color,self.name,self.x,self.y,self.radius,self.angle))
-            return ("%s\t%s\t(%.1f,%.1f) ft\t%.1f ft\t%.1f deg\t\t<-CAR-" % (self.color,self.name,self.x,self.y,self.radius,self.angle))
+            if (usingTerminal):
+                return ("\033[1;35;40m%s\t%s\t(%.1f,%.1f) ft\t%.1f ft\t%.1f deg\033[0m\t\t<-CAR-" % (self.color,self.name,self.x,self.y,self.radius,self.angle))
+            else:
+                return ("%s\t%s\t(%.1f,%.1f) ft\t%.1f ft\t%.1f deg\t\t<-CAR-" % (self.color,self.name,self.x,self.y,self.radius,self.angle))
         elif self.highlight == True:
-            # return ("\033[1;31;40m%s\t%s\t(%.1f,%.1f) ft\t%.1f ft\t%.1f deg\033[0m\t<-----" % (self.color,self.name,self.x,self.y,self.radius,self.angle))
-            return ("%s\t%s\t(%.1f,%.1f) ft\t%.1f ft\t%.1f deg\t<-----" % (self.color,self.name,self.x,self.y,self.radius,self.angle))
+            if (usingTerminal):
+                return ("\033[1;31;40m%s\t%s\t(%.1f,%.1f) ft\t%.1f ft\t%.1f deg\033[0m\t<-----" % (self.color,self.name,self.x,self.y,self.radius,self.angle))
+            else:
+                return ("%s\t%s\t(%.1f,%.1f) ft\t%.1f ft\t%.1f deg\t<-----" % (self.color,self.name,self.x,self.y,self.radius,self.angle))
         return ("%s\t%s\t(%.1f,%.1f) ft\t%.1f ft\t%.1f deg" % (self.color,self.name,self.x,self.y,self.radius,self.angle))
 def get_angle_and_distance(p, offset_angle):
     angle = math.degrees(math.atan(p.y / p.x)) - 90 + offset_angle
@@ -84,8 +92,8 @@ def Intersect_Points(b1, b2):
     i2y = P2.imag + h * (P1.real - P0.real) / d
 
     # computer monitor graph (positive y-direction is down)
-    car_location1 = Point(i1x, (grid_y - i1y))
-    car_location2 = Point(i2x, (grid_y - i2y))
+    car_location1 = Point(round(i1x), round(grid_y - i1y))
+    car_location2 = Point(round(i2x), round(grid_y - i2y))
     # print("Circle Intersection:",car_location1, car_location2)
     if (car_location1.y > car_location2.y):
         return car_location1
@@ -134,17 +142,20 @@ def NextMag(cP, nP):
     return magnitude(dx,dy)
 def GetArduinoAnglesAndMagnitudes(B1color,B2color,B1hypotenuse, B2hypotenuse, B1angle, DestinationOrder):
     # Given this
-    ColorsArray = ['NNN','NNN','NNN','NNN','NNN','RGB','RBG','GRB','GBR','BRG','BGR','RGN','RBN','GRN','GBN','BRN','BGN']
+    # ColorsArray = ['NNN','NNN','NNN','NNN','NNN','RGB','RBG','GRB','GBR','BRG','BGR','RGN','RBN','GRN','GBN','BRN','BGN']
+    ColorsArray = ['NNN','NNN','NNN','NNN','NNN','GRB','BRN','RGB','RBN','BRG','RGN','GBR','GRN','BGR','GBN','RBG','BGN']
     BeaconNames = ['Car','x1','x2','x3','x4','B1','B2','B3','B4','B5','B6','B7','B8','B9','B10','B11','B12']
-    Xarray = [4,2,7,2,6,2,5,7,9,9,9,7,4,1,0,0,0]        #Beacon X coordinates
-    Yarray = [5,2,3,7,8,0,0,0,2,5,8,11,11,11,8,5,2]     #Beacon Y coordinates
-    MagArray = [0,3.61,3.61,2.83,3.61,5.39,5.10,5.83,5.83,5.00,5.83,6.71,6.00,6.71,5.00,4.00,5.00] # Beacon Distance from Car
-    AngleArray = [0,33.7,-56.3,135.0,-146.3,21.8,-11.3,-31.0,-59.0,-90.0,-121.0,-153.4,180.0,153.4,126.9,90.0,53.1] # Beacon Angle from Car
+    # Xarray = [4,2,7,2,6,2,5,7,9,9,9,7,4,1,0,0,0]        #Beacon X coordinates
+    Xarray = [4,2,7,2,6,2.5,5,7.5,10,10,10,7.5,5,2.5,0,0,0]
+    # Yarray = [5,2,3,7,8,0,0,0,2,5,8,11,11,11,8,5,2]     #Beacon Y coordinates
+    Yarray = [5,2,3,7,8,0,0,0,1.5,3.5,5.5,7,7,7,5.5,3.5,1.5]
+    # MagArray = [0,3.61,3.61,2.83,3.61,5.39,5.10,5.83,5.83,5.00,5.83,6.71,6.00,6.71,5.00,4.00,5.00] # Beacon Distance from Car
+    # AngleArray = [0,33.7,-56.3,135.0,-146.3,21.8,-11.3,-31.0,-59.0,-90.0,-121.0,-153.4,180.0,153.4,126.9,90.0,53.1] # Beacon Angle from Car
     BeaconArray = []
 
     # Input from PiCamera
-    B1color = 'RGB'
-    B2color = 'RBG'
+    # B1color = 'RGB'
+    # B2color = 'RBG'
 
     # Use first 2 Beacons for Creating the Grid math
     indexB1 = ColorsArray.index(B1color)
@@ -153,20 +164,22 @@ def GetArduinoAnglesAndMagnitudes(B1color,B2color,B1hypotenuse, B2hypotenuse, B1
     x1 = Xarray[indexB1]
     y1 = Yarray[indexB1]
     B1name = BeaconNames[indexB1]
-    hypotenuse1 = MagArray[indexB1]
-    angle1 = AngleArray[indexB1]
+    # hypotenuse1 = MagArray[indexB1]
+    # angle1 = AngleArray[indexB1]
     # hypotenuse1 = hyps [0]        # Given from piCamera in cm
     # angle1 = angles[0]           # Given from piCamera in degrees
 
     x2 = Xarray[indexB2]
     y2 = Yarray[indexB2]
     B2name = BeaconNames[indexB2]
-    hypotenuse2 = MagArray[indexB2]
-    angle2 = AngleArray[indexB2]  # Do not need this, can be deleted
+    # hypotenuse2 = MagArray[indexB2]
+    # angle2 = AngleArray[indexB2]  # Do not need this, can be deleted
     # hypotenuse2 = hyps[1]       # Given from piCamera in cm
 
-    beacon1 = Beacon(B1color,B1name,x1,y1,hypotenuse1,angle1)
-    beacon2 = Beacon(B2color,B2name,x2,y2,hypotenuse2,angle2)
+    # beacon1 = Beacon(B1color,B1name,x1,y1,hypotenuse1,angle1)
+    # beacon2 = Beacon(B2color,B2name,x2,y2,hypotenuse2,angle2)
+    beacon1 = Beacon(B1color,B1name,x1,y1,B1hypotenuse,B1angle)
+    beacon2 = Beacon(B2color,B2name,x2,y2,B2hypotenuse)
 
     # Target Destination
     xT = Xarray[DestinationOrder[0]]
@@ -178,7 +191,7 @@ def GetArduinoAnglesAndMagnitudes(B1color,B2color,B1hypotenuse, B2hypotenuse, B1
     xT4 = Xarray[DestinationOrder[3]]
     yT4 = Yarray[DestinationOrder[3]]
 
-    angleForArduino, magnitudeForArduino, CarDestination = Get_Angle_Distance_For_Arduino(beacon1, beacon2,angle1,xT,yT)
+    angleForArduino, magnitudeForArduino, CarDestination = Get_Angle_Distance_For_Arduino(beacon1,beacon2,B1angle,xT,yT)
 
     Xarray[0] = Beacon.car.x
     Yarray[0] = Beacon.car.y
@@ -218,8 +231,13 @@ def GetArduinoAnglesAndMagnitudes(B1color,B2color,B1hypotenuse, B2hypotenuse, B1
             a[i] += 360
 
     return  magnitudeForArduino, magnitude2, magnitude3, magnitude4, a[0], a[1], a[2], a[3], angleForArduino+90, angleCarWillbeFacing2, angleCarWillbeFacing3, angleCarWillbeFacing4
+# Green "STRING", red "COMMENT", orange "KEYWORD"
 
-# Inputs from PiCamera
+if (usingTerminal):
+    print("\nCOLOR\tITEM\tLOCATION    M_FROM_CAR  ANGLE_FROM_CAR")
+else:
+    color.write("\nCOLOR\tITEM\tLOCATION    M_FROM_CAR  ANGLE_FROM_CAR\n","KEYWORD")
+
 a = ['6','5','a', 'b', 'c', 'd','e','f']
 a = ''.join(a)
 a1 = a[2:-3]    # abc
@@ -227,23 +245,21 @@ a2 = a[:2]      # 65
 a3 = a[:-2]     # 65abcd
 a4 = a[2:]      # abcdef
 print(a1,a2,a3,a4)
-B1color = 'RGB'
-B2color = 'RBG'
-B1hypotenuse = 5.39     # Given from piCamera in cm
+
+# Inputs from PiCamera
+B1color = 'GRB'
+B2color = 'BRN'
+B1hypotenuse = 5.39     # Given from piCamera in cm *use cm_to_feet()
 B2hypotenuse = 5.10     # Given from piCamera in cm
 B1angle = 21.8          # Given from piCamera in degrees
-DestinationOrder = [2,1,3,4]
 
-# color.write("Yes","STRING")
-# color.write("No\n","COMMENT")
-# color.write("Hi, are you called Miharu461? \n","KEYWORD")
-print("\nCOLOR\tITEM\tLOCATION    M_FROM_CAR  ANGLE_FROM_CAR")
-# color.write("\nCOLOR\tITEM\tLOCATION    M_FROM_CAR  ANGLE_FROM_CAR\n","KEYWORD")
-
-
+DestinationOrder = [4,1,3,2]
 m1, m2, m3, m4, a1, a2, a3, a4, pi1, pi2, pi3, pi4  = GetArduinoAnglesAndMagnitudes(B1color, B2color, B1hypotenuse, B2hypotenuse, B1angle, DestinationOrder)
 
-print("\n\t\t\tx%d\tx%d\tx%d\tx%d\t" % (DestinationOrder[0],DestinationOrder[1],DestinationOrder[2],DestinationOrder[3]))
+if (usingTerminal):
+    print("\n\t\t\tx%d\tx%d\tx%d\tx%d\t" % (DestinationOrder[0],DestinationOrder[1],DestinationOrder[2],DestinationOrder[3]))
+else:
+    color.write("\n\t\t\tx%d\tx%d\tx%d\tx%d\t\n" % (DestinationOrder[0],DestinationOrder[1],DestinationOrder[2],DestinationOrder[3]),"KEYWORD")
 print("Magnitudes (Travel):\t%.1f\t%.1f\t%.1f\t%.1f" % (m1,m2,m3,m4))
 print("Angles (Car Rotation):\t%.1f\t%.1f\t%.1f\t%.1f" % (a1,a2,a3,a4))
 print("PI Angle:\t\t%.1f\t%.1f\t%.1f\t%.1f" % (pi1,pi2,pi3,pi4))
